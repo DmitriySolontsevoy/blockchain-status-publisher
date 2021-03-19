@@ -16,8 +16,8 @@ public class BlockchainStatusScheduler {
         this.restClient = restClient;
     }
 
-    @Scheduled(fixedDelay = 30000)
-    public void checkStatus() {
+    @Scheduled(fixedDelayString = "${poll.interval}")
+    public void pollBlock() {
         restClient.getBlockchainStatus();
     }
 }

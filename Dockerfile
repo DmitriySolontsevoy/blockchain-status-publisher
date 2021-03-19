@@ -3,11 +3,12 @@ COPY src /home/app/src
 COPY pom.xml /home/app
 RUN mvn -f /home/app/pom.xml clean package
 
-FROM openjdk:8git
-COPY --from=build /home/app/target/docker-homework-0.0.1-SNAPSHOT.jar /usr/local/lib/demo.jar
+FROM openjdk:8
+COPY --from=build /home/app/target/docker-homework-0.0.1-SNAPSHOT.jar /usr/local/lib/app.jar
 
 EXPOSE 5672 8082
 
 ENTRYPOINT java \
-    -jar /usr/local/lib/demo.jar \
+    -jar /usr/local/lib/app.jar \
     --rabbitmq.host=$RABBITMQ_HOST \
+    --poll.interval=$POLL_INTERVAL \
