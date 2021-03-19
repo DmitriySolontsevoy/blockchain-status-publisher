@@ -10,6 +10,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
+import org.web3j.protocol.core.methods.response.EthBlockNumber;
+import org.web3j.protocol.http.HttpService;
 
 import java.util.Objects;
 
@@ -31,14 +35,28 @@ public class RestClient {
 
     @SneakyThrows
     public void getBlockchainStatus() {
-        Request request = new Request.Builder()
-                .url("http://api.blockcypher.com/v1/beth/test")
-                .method("GET", null)
-                .build();
+//        Request request = new Request.Builder()
+//                .url("http://api.blockcypher.com/v1/beth/test")
+//                .method("GET", null)
+//                .build();
+//
+//        Response response = okHttpClient.newCall(request).execute();
+//        BlockDTO newBlock = responseParser.parseResponse(Objects.requireNonNull(response.body()));
 
-        Response response = okHttpClient.newCall(request).execute();
-        BlockDTO newBlock = responseParser.parseResponse(Objects.requireNonNull(response.body()));
+        Web3j webClient = Web3j.build(new HttpService("http://13.37.0.8"));
 
-        rmqSender.sendMessage(messageSerializer.serializeMessage(newBlock));
+        long blockNumber = webClient.ethBlockNumber()
+                .sendAsync()
+                .get()
+                .getBlockNumber()
+                .longValue();
+        long blockTime = webClient.ethGetBlockByNumber(new DefaultBlockParameterNumber(blockNumber), false)
+                .sendAsync()
+                .get()
+                .getBlock()
+                .getTimestamp()
+                .longValue();
+
+        this.rmqSender.sendMessage(messageSerializer.serializeMessage(new BlockDTO(blockNumber, blockTime)));
     }
 }
